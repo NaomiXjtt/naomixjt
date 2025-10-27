@@ -1,0 +1,18 @@
+.top-nav{
+  position:sticky;
+  top:0;
+  display:flex;
+  gap:20px;
+  padding:12px 24px;
+  background:rgba(255,255,255,0.75);
+  backdrop-filter:blur(6px);
+  z-index:1000;
+}
+.top-nav a{
+  text-decoration:none;
+  font-weight:500;
+  color:#222;
+}
+.top-nav a:hover{
+  opacity:.65;
+}
