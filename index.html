@@ -1,1 +1,791 @@
-Hello!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Petals of Mind — Single Page App (Scrollable)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 外链样式 -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- 基础导航样式：你可以保留在这里，或复制到 styles.css -->
+  <style>
+    .top-nav{
+      position: sticky;
+      top: 0;
+      display: flex;
+      gap: 20px;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.78);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      z-index: 1000;
+    }
+    .top-nav a{
+      text-decoration: none;
+      font-weight: 500;
+      color: #222;
+    }
+    .top-nav a:hover{ opacity: .7; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 全局导航（位于 .app 顶部，所有 section 之上） -->
+  <nav class="top-nav" aria-label="Primary navigation">
+    <a href="#" data-nav="home">Home</a>
+    <a href="#" data-nav="result">Result</a>
+    <a href="#" data-nav="share">Share</a>
+  </nav>
+
+  <!-- ============ HOME ============ -->
+  <section id="home" class="view active" aria-label="Home / Arrangement">
+    <header class="banner">
+      <h1>Petals of Mind</h1>
+      <p>Drag the flowers below onto the vase. Double-click a placed flower to remove it.</p>
+    </header>
+
+    <div class="panel">
+      <div class="stage-wrap" id="home-stage" aria-label="Arrangement stage">
+        <img src="https://i.postimg.cc/xCBTPvnd/petals-of-mind-1.png" alt="Vase" class="vase" />
+
+        <!-- 工具条放在舞台内 -->
+        <div class="stage-tools" id="stageTools" aria-label="Flower tools">
+          <button type="button" id="btnSmaller" title="Smaller">–</button>
+          <button type="button" id="btnBigger"  title="Bigger">+</button>
+          <button type="button" id="btnFront"   title="Front">Front</button>
+          <button type="button" id="btnBack"    title="Back">Back</button>
+          <button type="button" id="btnDelete"  title="Delete">Delete</button>
+        </div>
+      </div>
+
+      <!-- 花朵调色板（20张图片，可拖拽 + 可点“i”看花语） -->
+      <section class="palette" aria-label="Flower palette">
+        <div class="chip-grid" id="home-palette">
+          <!-- 每个 chip：可拖拽；右上角有“i”按钮（点击打开花语浮层） -->
+          <div class="chip" draggable="true" data-name="Camellia" data-src="https://i.postimg.cc/wB0M8j5T/Camilia-no-bg.png" title="Camellia">
+            <img src="https://i.postimg.cc/wB0M8j5T/Camilia-no-bg.png" alt="Camellia" draggable="false">
+            <a class="chip-info" href="#m-camellia" draggable="false" aria-label="Camellia meaning">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Crane Flower" data-src="https://i.postimg.cc/ZqVnt5P0/Crane-flower-no-bg.png" title="Crane Flower">
+            <img src="https://i.postimg.cc/ZqVnt5P0/Crane-flower-no-bg.png" alt="Crane Flower" draggable="false">
+            <a class="chip-info" href="#m-craneflower" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Daisy" data-src="https://i.postimg.cc/252yRSdy/Daisy-no-bg.png" title="Daisy">
+            <img src="https://i.postimg.cc/252yRSdy/Daisy-no-bg.png" alt="Daisy" draggable="false">
+            <a class="chip-info" href="#m-daisy" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Gladioli" data-src="https://i.postimg.cc/6QYqJpV3/Gladioli-no-bg.png" title="Gladioli">
+            <img src="https://i.postimg.cc/6QYqJpV3/Gladioli-no-bg.png" alt="Gladioli" draggable="false">
+            <a class="chip-info" href="#m-gladioli" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Hyacinth" data-src="https://i.postimg.cc/LsN5K8kn/hyacinth-no-bg.png" title="Hyacinth">
+            <img src="https://i.postimg.cc/LsN5K8kn/hyacinth-no-bg.png" alt="Hyacinth" draggable="false">
+            <a class="chip-info" href="#m-hyacinth" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Hydrangea" data-src="https://i.postimg.cc/N0pFqj8y/Hydrangea-no-bg.png" title="Hydrangea">
+            <img src="https://i.postimg.cc/N0pFqj8y/Hydrangea-no-bg.png" alt="Hydrangea" draggable="false">
+            <a class="chip-info" href="#m-hydrangea" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Iris" data-src="https://i.postimg.cc/SsRsybVm/Iris-no-bg.png" title="Iris">
+            <img src="https://i.postimg.cc/SsRsybVm/Iris-no-bg.png" alt="Iris" draggable="false">
+            <a class="chip-info" href="#m-iris" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Jasmine" data-src="https://i.postimg.cc/rmsm82gM/Jasmin-no-bg.png" title="Jasmine">
+            <img src="https://i.postimg.cc/rmsm82gM/Jasmin-no-bg.png" alt="Jasmine" draggable="false">
+            <a class="chip-info" href="#m-jasmine" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Lily" data-src="https://i.postimg.cc/85c51gw1/Lily-no-bg.png" title="Lily">
+            <img src="https://i.postimg.cc/85c51gw1/Lily-no-bg.png" alt="Lily" draggable="false">
+            <a class="chip-info" href="#m-lily" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Lily of the Valley" data-src="https://i.postimg.cc/Hxnxp13Y/lily-of-the-valley-no-bg.png" title="Lily of the Valley">
+            <img src="https://i.postimg.cc/Hxnxp13Y/lily-of-the-valley-no-bg.png" alt="Lily of the Valley" draggable="false">
+            <a class="chip-info" href="#m-lilyvalley" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Lotus" data-src="https://i.postimg.cc/DZ0Z235y/Lotus-no-bg.png" title="Lotus">
+            <img src="https://i.postimg.cc/DZ0Z235y/Lotus-no-bg.png" alt="Lotus" draggable="false">
+            <a class="chip-info" href="#m-lotus" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Narcissus" data-src="https://i.postimg.cc/QtCtXZSd/narcissus-no-bg.png" title="Narcissus">
+            <img src="https://i.postimg.cc/QtCtXZSd/narcissus-no-bg.png" alt="Narcissus" draggable="false">
+            <a class="chip-info" href="#m-narcissus" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Night Blooming Cereus" data-src="https://i.postimg.cc/Jn0n1CKh/night-blooming-cereus-no-bg.png" title="Night Blooming Cereus">
+            <img src="https://i.postimg.cc/Jn0n1CKh/night-blooming-cereus-no-bg.png" alt="Night Blooming Cereus" draggable="false">
+            <a class="chip-info" href="#m-nightbloom" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Orchid" data-src="https://i.postimg.cc/mDkDbWVD/Orchid-no-ng.png" title="Orchid">
+            <img src="https://i.postimg.cc/mDkDbWVD/Orchid-no-ng.png" alt="Orchid" draggable="false">
+            <a class="chip-info" href="#m-orchid" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Osmanthus" data-src="https://i.postimg.cc/XJqJV6xq/Osmanthus-no-bg.png" title="Osmanthus">
+            <img src="https://i.postimg.cc/XJqJV6xq/Osmanthus-no-bg.png" alt="Osmanthus" draggable="false">
+            <a class="chip-info" href="#m-osmanthus" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Peony" data-src="https://i.postimg.cc/rmsm82gz/peony-no-bg.png" title="Peony">
+            <img src="https://i.postimg.cc/rmsm82gz/peony-no-bg.png" alt="Peony" draggable="false">
+            <a class="chip-info" href="#m-peony" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Rosalia" data-src="https://i.postimg.cc/QtCtXZSB/Rosalia-no-bg.png" title="Rosalia">
+            <img src="https://i.postimg.cc/QtCtXZSB/Rosalia-no-bg.png" alt="Rosalia" draggable="false">
+            <a class="chip-info" href="#m-rosalia" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Rose" data-src="https://i.postimg.cc/85c51gwJ/Roses-no-bg.png" title="Rose">
+            <img src="https://i.postimg.cc/85c51gwJ/Roses-no-bg.png" alt="Rose" draggable="false">
+            <a class="chip-info" href="#m-rose" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Sunflower" data-src="https://i.postimg.cc/bJrJzfLt/Sunflowers-no-bg.png" title="Sunflower">
+            <img src="https://i.postimg.cc/bJrJzfLt/Sunflowers-no-bg.png" alt="Sunflower" draggable="false">
+            <a class="chip-info" href="#m-sunflower" draggable="false">i</a>
+          </div>
+          <div class="chip" draggable="true" data-name="Tulips" data-src="https://i.postimg.cc/B6b6qfN1/Tulips.png" title="Tulips">
+            <img src="https://i.postimg.cc/B6b6qfN1/Tulips.png" alt="Tulips" draggable="false">
+            <a class="chip-info" href="#m-tulips" draggable="false">i</a>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="ghost-btn" id="btn-clear">Clear Vase</button>
+          <button class="ghost-btn" id="btn-finish">Finish Arrangement</button>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ FLOWER（保留） ============ -->
+  <section id="flower" class="view" aria-label="Flower Intro">
+    <div class="panel">
+      <a class="oval-link back" href="#" data-nav="home">← Back</a>
+      <h1 class="title">Petals of Mind</h1>
+      <div class="row">
+        <figure>
+          <img src="https://picsum.photos/seed/orchid-hero/900/1100" alt="Butterfly Orchid watercolor illustration" />
+          <figcaption>Butterfly Orchid — graceful, tender, quietly resilient.</figcaption>
+        </figure>
+        <article>
+          <div class="card">
+            <h3 style="margin-top:0;">Butterfly Orchid</h3>
+            <section>
+              <h4 style="margin:0 0 8px; color:#444;">Meaning</h4>
+              <p>The butterfly orchid symbolizes grace, tenderness, and enduring love…</p>
+            </section>
+            <p style="margin-top:14px;">
+              <a href="#" class="oval-link" data-nav="home">Add to Bouquet</a>
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULT ============ -->
+  <section id="result" class="view" aria-label="Result">
+    <div class="panel">
+      <a class="oval-link share-top" href="#" data-nav="share">Share</a>
+      <h1 class="title">Petals of Mind – Result page</h1>
+
+    <div class="stage-wrap" id="result-stage" aria-label="Final arrangement stage">
+  <img src="https://i.postimg.cc/xCBTPvnd/petals-of-mind-1.png" alt="Vase" class="vase" />
+</div>
+
+<!-- 动态气泡挂载点（JS 会填充） -->
+<div id="result-bubbles"></div>
+
+<!-- Encouragement 卡片容器（JS 会填充文本） -->
+<article class="enc" id="result-enc" aria-labelledby="enc-title">
+  <h2 id="enc-title" style="margin:0 0 8px;">Encouragement</h2>
+  <p id="result-enc-text" style="margin:0;"></p>
+</article>
+
+
+      <section class="bubble b1"><p style="margin:0;">The butterfly orchid symbolizes grace, tenderness, and quiet longevity…</p></section>
+      <section class="bubble b2"><p style="margin:0;">The lily speaks of purity, rebirth, and sincerity…</p></section>
+      <section class="bubble b3"><p style="margin:0;">The olive branch carries peace, wisdom, and reconciliation…</p></section>
+
+      <article class="enc" aria-labelledby="enc-title">
+        <h2 id="enc-title" style="margin:0 0 8px;">Encouragement</h2>
+        <p style="margin:0;">Your bouquet carries the calm of the orchid, the purity of the lily, and the wisdom of the olive leaf…</p>
+      </article>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="btn-save">Save Image</button>
+        <a class="oval-link" href="#" data-nav="home">Start Over</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHARE ============ -->
+  <section id="share" class="view" aria-label="Share">
+    <div class="canvas">
+      <h1 class="title">Share Your Bouquet</h1>
+      <a class="oval-link home-link" href="#" data-nav="home">Home</a>
+      <div class="controls">
+        <button class="ghost-btn" id="btn-add">Add Mock Upload</button>
+        <span style="font-size:12px;opacity:.8">Bubbles float & are draggable; click 👍/💗 to react; click bubble to view details.</span>
+      </div>
+      <section class="wall" id="share-wall" aria-label="Community Wall"></section>
+    </div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <section id="detail" class="view" aria-label="Work Detail">
+    <div class="panel">
+      <h1 class="title">Share Your Bouquet</h1>
+
+      <section class="row">
+        <figure>
+          <img src="https://placehold.co/360x360?text=User%27s+Work" alt="Selected user bouquet" />
+          <figcaption style="position:absolute; left:-9999px;">User’s Work preview</figcaption>
+        </figure>
+        <article>
+          <div class="story-card">
+            <h2 style="margin:0 0 10px; text-align:center; font-size:20px;">User’s Story</h2>
+            <p style="margin:8px 0; line-height:1.55;">…(story text)…</p>
+            <div style="flex:1"></div>
+          </div>
+        </article>
+      </section>
+
+      <div class="navs">
+        <a class="oval-link" href="#" data-nav="share">← Back to Gallery</a>
+        <button class="ghost-btn" id="btn-leave">Leave Comments</button>
+        <a class="oval-link" href="#" data-nav="home">Home</a>
+      </div>
+
+      <section id="detail-modal" class="modal-js" aria-labelledby="commentTitle" aria-hidden="true">
+        <h3 id="commentTitle" style="margin:0 0 8px; font-size:16px;">Leave an encouraging note</h3>
+        <textarea rows="6" style="width:100%; resize:vertical; padding:10px; border-radius:8px; border:1px solid #ddd; font-family:inherit;"></textarea>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+          <button class="ghost-btn" id="btn-close">Close</button>
+          <button class="ghost-btn">Post</button>
+        </div>
+      </section>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <p style="margin:0;">&copy; <time datetime="2025">2025</time> Petals of Mind</p>
+</footer>
+
+<!-- ========== Flower Meaning Modals (纯 HTML/CSS :target) ========== -->
+<!-- 结构：每个 modal 是一个 section，id 与上方 “i” 链接一致；点击 Close 或背景跳回 # 关闭 -->
+
+<section id="m-camellia" class="modal" role="dialog" aria-labelledby="m-camellia-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-camellia-title">Camellia — devotion & admiration</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/wB0M8j5T/Camilia-no-bg.png" alt="Camellia">
+      <div class="meta">
+        <h4>Meaning</h4><p>Camellia symbolizes steadfast love, admiration, and quiet strength—beauty that endures without demanding attention.</p>
+        <h4>Encouragement</h4><p>Your calm devotion is enough; keep showing up for yourself, gently and consistently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="m-craneflower" class="modal" role="dialog" aria-labelledby="m-craneflower-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-craneflower-title">Crane Flower — joy & uniqueness</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/ZqVnt5P0/Crane-flower-no-bg.png" alt="Crane Flower">
+      <div class="meta"><h4>Meaning</h4><p>Symbol of celebration, freedom, and standing out with confidence.</p><h4>Encouragement</h4><p>Let your colors show—your differences are your power.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-daisy" class="modal" role="dialog" aria-labelledby="m-daisy-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-daisy-title">Daisy — innocence & clarity</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/252yRSdy/Daisy-no-bg.png" alt="Daisy">
+      <div class="meta"><h4>Meaning</h4><p>Fresh starts, sincerity, and simple joy.</p><h4>Encouragement</h4><p>Start small and honest—clarity grows when you begin.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-gladioli" class="modal" role="dialog" aria-labelledby="m-gladioli-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-gladioli-title">Gladioli — courage & integrity</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/6QYqJpV3/Gladioli-no-bg.png" alt="Gladioli">
+      <div class="meta"><h4>Meaning</h4><p>Resilience, honor, and standing tall through challenges.</p><h4>Encouragement</h4><p>Hold your ground—your values are your compass.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-hyacinth" class="modal" role="dialog" aria-labelledby="m-hyacinth-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-hyacinth-title">Hyacinth — renewal & heartfelt words</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/LsN5K8kn/hyacinth-no-bg.png" alt="Hyacinth">
+      <div class="meta"><h4>Meaning</h4><p>Springlike renewal and the courage to speak honestly.</p><h4>Encouragement</h4><p>Say what you feel—new growth begins with truth.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-hydrangea" class="modal" role="dialog" aria-labelledby="m-hydrangea-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-hydrangea-title">Hydrangea — gratitude & understanding</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/N0pFqj8y/Hydrangea-no-bg.png" alt="Hydrangea">
+      <div class="meta"><h4>Meaning</h4><p>Layers of feelings, empathy, and heartfelt thanks.</p><h4>Encouragement</h4><p>Be proud of your depth—your feelings are valid and wise.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-iris" class="modal" role="dialog" aria-labelledby="m-iris-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-iris-title">Iris — hope & vision</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/SsRsybVm/Iris-no-bg.png" alt="Iris">
+      <div class="meta"><h4>Meaning</h4><p>Bridging confusion to clarity; a messenger of trust and insight.</p><h4>Encouragement</h4><p>Trust the bigger picture—your path is unfolding.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-jasmine" class="modal" role="dialog" aria-labelledby="m-jasmine-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-jasmine-title">Jasmine — comfort & tenderness</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/rmsm82gM/Jasmin-no-bg.png" alt="Jasmine">
+      <div class="meta"><h4>Meaning</h4><p>Softness, soothing presence, and faithful affection.</p><h4>Encouragement</h4><p>Let gentleness be your strength today.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-lily" class="modal" role="dialog" aria-labelledby="m-lily-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-lily-title">Lily — purity & renewal</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/85c51gw1/Lily-no-bg.png" alt="Lily">
+      <div class="meta"><h4>Meaning</h4><p>Clarity, sincerity, and gentle healing after storms.</p><h4>Encouragement</h4><p>Breathe—today is allowed to be a clean page.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-lilyvalley" class="modal" role="dialog" aria-labelledby="m-lilyvalley-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-lilyvalley-title">Lily of the Valley — humility & comfort</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/Hxnxp13Y/lily-of-the-valley-no-bg.png" alt="Lily of the Valley">
+      <div class="meta"><h4>Meaning</h4><p>Quiet joy and the kind of kindness that heals.</p><h4>Encouragement</h4><p>Small, steady kindness counts—toward others and yourself.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-lotus" class="modal" role="dialog" aria-labelledby="m-lotus-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-lotus-title">Lotus — resilience & awakening</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/DZ0Z235y/Lotus-no-bg.png" alt="Lotus">
+      <div class="meta"><h4>Meaning</h4><p>Rising clean from the mud; purity through perseverance.</p><h4>Encouragement</h4><p>You are growing even when it feels messy—keep rising.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-narcissus" class="modal" role="dialog" aria-labelledby="m-narcissus-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-narcissus-title">Narcissus — self-respect & new beginnings</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/QtCtXZSd/narcissus-no-bg.png" alt="Narcissus">
+      <div class="meta"><h4>Meaning</h4><p>Fresh starts and the courage to honor your needs.</p><h4>Encouragement</h4><p>Choose what nourishes you—new chapters welcome you.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-nightbloom" class="modal" role="dialog" aria-labelledby="m-nightbloom-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-nightbloom-title">Night Blooming Cereus — rarity & wonder</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/Jn0n1CKh/night-blooming-cereus-no-bg.png" alt="Night Blooming Cereus">
+      <div class="meta"><h4>Meaning</h4><p>Precious moments that appear briefly and shine brightly.</p><h4>Encouragement</h4><p>Treasure your small wins—brief light still warms.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-orchid" class="modal" role="dialog" aria-labelledby="m-orchid-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-orchid-title">Orchid — grace & quiet strength</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/mDkDbWVD/Orchid-no-ng.png" alt="Orchid">
+      <div class="meta"><h4>Meaning</h4><p>Refined beauty, resilience, and enduring affection.</p><h4>Encouragement</h4><p>Your softness is not weakness—it’s well-trained strength.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-osmanthus" class="modal" role="dialog" aria-labelledby="m-osmanthus-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-osmanthus-title">Osmanthus — warmth & harmony</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/XJqJV6xq/Osmanthus-no-bg.png" alt="Osmanthus">
+      <div class="meta"><h4>Meaning</h4><p>Fragrant memories, reunion, and gentle abundance.</p><h4>Encouragement</h4><p>Let comfort guide you back to what feels like home.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-peony" class="modal" role="dialog" aria-labelledby="m-peony-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-peony-title">Peony — prosperity & compassion</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/rmsm82gz/peony-no-bg.png" alt="Peony">
+      <div class="meta"><h4>Meaning</h4><p>Full-hearted generosity and dignified beauty.</p><h4>Encouragement</h4><p>There’s room for you to bloom big—take up space kindly.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-rosalia" class="modal" role="dialog" aria-labelledby="m-rosalia-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-rosalia-title">Rosalia — celebration & remembrance</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/QtCtXZSB/Rosalia-no-bg.png" alt="Rosalia">
+      <div class="meta"><h4>Meaning</h4><p>Honoring the past while welcoming joy back in.</p><h4>Encouragement</h4><p>Carry your memories gently—they can coexist with delight.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-rose" class="modal" role="dialog" aria-labelledby="m-rose-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-rose-title">Rose — love & courage of the heart</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/85c51gwJ/Roses-no-bg.png" alt="Rose">
+      <div class="meta"><h4>Meaning</h4><p>Affection, beauty, and brave vulnerability.</p><h4>Encouragement</h4><p>It’s brave to care—keep tending what matters to you.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-sunflower" class="modal" role="dialog" aria-labelledby="m-sunflower-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-sunflower-title">Sunflower — optimism & loyalty</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/bJrJzfLt/Sunflowers-no-bg.png" alt="Sunflower">
+      <div class="meta"><h4>Meaning</h4><p>Turning toward light, steadfast and generous.</p><h4>Encouragement</h4><p>Look for the warm spot—your attention is a superpower.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="m-tulips" class="modal" role="dialog" aria-labelledby="m-tulips-title">
+  <a class="modal-scrim" href="#"></a>
+  <div class="modal-card">
+    <header><h3 id="m-tulips-title">Tulips — sincerity & gentle joy</h3><a class="close" href="#">×</a></header>
+    <div class="body">
+      <img src="https://i.postimg.cc/B6b6qfN1/Tulips.png" alt="Tulips">
+      <div class="meta"><h4>Meaning</h4><p>Honest feelings, comfort, and everyday delight.</p><h4>Encouragement</h4><p>Let simple joys count—they add up to real balance.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 脚本（原有交互：拖拽、工具条、分享墙等） ========== -->
+<script>
+/* ========= Simple View Router ========= */
+const views = ["home","flower","result","share","detail"];
+function showView(id){
+  views.forEach(v=> document.getElementById(v).classList.toggle('active', v===id));
+  if(id==="share"){ startShare(); } else { stopShare(); }
+  if(id==="home"){ requestAnimationFrame(positionToolsNearVase); }
+}
+document.querySelectorAll('[data-nav]').forEach(a=>{
+  a.addEventListener('click', (e)=>{ e.preventDefault(); showView(a.getAttribute('data-nav')); });
+});
+
+/* ========= HOME interactions ========= */
+const homeStage   = document.getElementById('home-stage');
+const homePalette = document.getElementById('home-palette');
+const btnClear    = document.getElementById('btn-clear');
+const btnFinish   = document.getElementById('btn-finish');
+const tools       = document.getElementById('stageTools');
+const vase        = document.querySelector('#home-stage .vase');
+
+if (btnClear) btnClear.addEventListener('click', ()=>{
+  [...homeStage.querySelectorAll('.placed')].forEach(f=>f.remove());
+  setSelected(null);
+});
+if (btnFinish) btnFinish.addEventListener('click', ()=> showView('result'));
+
+/* 从调色板拖到舞台 */
+homePalette.addEventListener('dragstart', (e)=>{
+  const chip = e.target.closest('.chip'); if(!chip) return;
+  e.dataTransfer.setData('text/plain', JSON.stringify({
+    src: chip.dataset.src,
+    name: chip.dataset.name
+  }));
+});
+homeStage.addEventListener('dragover', e=> e.preventDefault());
+homeStage.addEventListener('drop', (e)=>{
+  e.preventDefault();
+  const data = e.dataTransfer.getData('text/plain');
+  if (!data) return;
+  const {src, name} = JSON.parse(data);
+  const rect = homeStage.getBoundingClientRect();
+  addPlacedImage({src, name, x: e.clientX-rect.left, y: e.clientY-rect.top});
+});
+
+/* ========= 选中 / 缩放 / 置顶 / 删除 ========= */
+let selected = null;
+let zCounter = 10;
+
+function setSelected(el){
+  if (selected && selected.isConnected) selected.classList.remove('selected');
+  selected = el;
+  if (selected) {
+    selected.classList.add('selected');
+    tools.style.display = 'flex';
+    updateToolButtons();
+    positionToolsNearVase();
+  } else {
+    tools.style.display = 'none';
+  }
+}
+
+homeStage.addEventListener('mousedown', (e)=>{
+  if (!e.target.closest('.placed')) setSelected(null);
+});
+
+function addPlacedImage({src, name, x, y}){
+  const box = document.createElement('div');
+  box.className = 'placed';
+  box.style.left = (x - 90) + 'px';   // 配合 180px 默认宽
+  box.style.top  = (y - 90) + 'px';
+  box.style.zIndex = ++zCounter;
+  box.dataset.scale = '1';
+
+  const img = document.createElement('img');
+  img.className = 'placed-img';
+  img.src = src;
+  img.alt = name || 'Flower';
+  box.appendChild(img);
+
+  homeStage.appendChild(box);
+
+  box.addEventListener('click', (e)=> { e.stopPropagation(); setSelected(box); });
+  box.addEventListener('dblclick', ()=> { if (selected === box) setSelected(null); box.remove(); });
+
+  box.addEventListener('wheel', (e)=>{
+    if (selected !== box) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.08 : -0.08;
+    scaleSelectedBy(delta);
+    positionToolsNearVase();
+  }, {passive:false});
+
+  enableDragWithin(box, homeStage);
+}
+
+function enableDragWithin(el, container){
+  let dragging=false, ox=0, oy=0;
+  el.addEventListener('mousedown', (e)=>{ 
+    dragging=true; ox=e.offsetX; oy=e.offsetY; el.style.cursor='grabbing';
+    setSelected(el);
+  });
+  document.addEventListener('mousemove', (e)=>{
+    if(!dragging) return;
+    const rect = container.getBoundingClientRect();
+    el.style.left = (e.clientX-rect.left-ox) + 'px';
+    el.style.top  = (e.clientY-rect.top -oy) + 'px';
+  });
+  document.addEventListener('mouseup', ()=>{ dragging=false; el.style.cursor='grab'; });
+}
+
+const btnSmaller = document.getElementById('btnSmaller');
+const btnBigger  = document.getElementById('btnBigger');
+const btnFront   = document.getElementById('btnFront');
+const btnBack    = document.getElementById('btnBack');
+const btnDelete  = document.getElementById('btnDelete');
+
+btnSmaller.addEventListener('click', ()=> scaleSelectedBy(-0.08));
+btnBigger .addEventListener('click', ()=> scaleSelectedBy(+0.08));
+btnFront  .addEventListener('click', ()=> bringToFront());
+btnBack   .addEventListener('click', ()=> sendToBack());
+btnDelete .addEventListener('click', ()=> deleteSelected());
+
+function updateToolButtons(){
+  const on = !!selected;
+  [btnSmaller, btnBigger, btnFront, btnBack, btnDelete].forEach(b=> b.disabled = !on);
+}
+
+function scaleSelectedBy(delta){
+  if (!selected) return;
+  const cur = parseFloat(selected.dataset.scale || '1');
+  let next = Math.max(0.4, Math.min(2.6, cur + delta));
+  selected.dataset.scale = String(next);
+  selected.style.transformOrigin = 'center bottom';
+  selected.style.transform = `scale(${next})`;
+}
+
+function bringToFront(){
+  if (!selected) return;
+  selected.style.zIndex = ++zCounter;
+}
+function sendToBack(){
+  if (!selected) return;
+  const minZ = 2; // 花瓶是 1
+  const current = parseInt(selected.style.zIndex || zCounter, 10);
+  selected.style.zIndex = Math.max(minZ, current - 10);
+}
+function deleteSelected(){
+  if (!selected) return;
+  const n = selected; setSelected(null); n.remove();
+}
+
+document.addEventListener('keydown', (e)=>{
+  if (!selected) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
+  if (e.key === '[') { e.preventDefault(); scaleSelectedBy(-0.08); }
+  if (e.key === ']') { e.preventDefault(); scaleSelectedBy(+0.08); }
+  if (e.key === '.') { e.preventDefault(); bringToFront(); }
+  if (e.key === ',') { e.preventDefault(); sendToBack(); }
+});
+
+function positionToolsNearVase() {
+  const tools = document.getElementById('stageTools');
+  const vase  = document.querySelector('#home-stage .vase');
+  if (!tools || !vase) return;
+  const stageRect = homeStage.getBoundingClientRect();
+  const vaseRect  = vase.getBoundingClientRect();
+  let x = vaseRect.right - stageRect.left + 12;
+  let y = vaseRect.top   - stageRect.top  + vaseRect.height * 0.35;
+
+  const prev = tools.style.display;
+  tools.style.display = 'flex';
+  const tw = tools.offsetWidth, th = tools.offsetHeight, pad = 8;
+  if (x + tw > homeStage.clientWidth - pad) x = Math.max(pad, homeStage.clientWidth - pad - tw);
+  if (y + th > homeStage.clientHeight - pad) y = Math.max(pad, homeStage.clientHeight - pad - th);
+  if (y < pad) y = pad;
+
+  tools.style.left = x + 'px';
+  tools.style.top  = y + 'px';
+
+  if (!selected) tools.style.display = 'none';
+}
+const vaseImg = document.querySelector('#home-stage .vase');
+if (vaseImg && !vaseImg.complete) vaseImg.addEventListener('load', positionToolsNearVase);
+else positionToolsNearVase();
+window.addEventListener('resize', positionToolsNearVase);
+
+/* ========= RESULT actions ========= */
+document.getElementById('btn-save').addEventListener('click', ()=>{
+  alert('Save Image (placeholder) — you can implement canvas export later.');
+});
+
+/* ========= SHARE (floating bubbles) ========= */
+let shareTicking=false, shareAnimId=null;
+const wall = document.getElementById('share-wall');
+document.getElementById('btn-add').addEventListener('click', ()=> createBubble());
+
+function rnd(min,max){ return Math.random()*(max-min)+min; }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function createBubble(opts={}){
+  const b = document.createElement('div');
+  b.className='bubble'; b.dataset.id=uid();
+  const W = wall.clientWidth, H = wall.clientHeight;
+  const s = opts.size ?? rnd(140,190);
+  b.style.width = b.style.height = s+'px';
+  b.style.left = (opts.x ?? rnd(0, W-s))+'px';
+  b.style.top  = (opts.y ?? rnd(0, H-s))+'px';
+  b.innerHTML = `
+    <div class="thumb" aria-hidden="true">Art</div>
+    <div class="label">${opts.title || "User’s Work"}</div>
+    <div class="reactions">
+      <div class="react like" role="button" aria-pressed="false" aria-label="Like"><span>👍</span><span class="count">${opts.likes||0}</span></div>
+      <div class="react fav" role="button" aria-pressed="false" aria-label="Favorite"><span>💗</span><span class="count">${opts.favs||0}</span></div>
+    </div>
+  `;
+  b.querySelector('.like').addEventListener('click', (e)=>{ e.stopPropagation(); toggleReact(e.currentTarget); });
+  b.querySelector('.fav') .addEventListener('click', (e)=>{ e.stopPropagation(); toggleReact(e.currentTarget); });
+  b.addEventListener('click', ()=> showView('detail'));
+  enableDragBubble(b);
+  b._vx = rnd(-0.15,0.15); b._vy = rnd(-0.2,-0.05);
+  wall.appendChild(b);
+  return b;
+}
+function toggleReact(el){
+  const cnt = el.querySelector('.count');
+  const active = el.classList.toggle('active');
+  el.setAttribute('aria-pressed', active ? 'true' : 'false');
+  cnt.textContent = Math.max(0, (+cnt.textContent) + (active ? 1 : -1));
+}
+function enableDragBubble(el){
+  let dragging=false, sx=0, sy=0, sl=0, st=0;
+  el.addEventListener('pointerdown', (e)=>{
+    dragging=true; el.setPointerCapture(e.pointerId);
+    sx=e.clientX; sy=e.clientY;
+    const r=el.getBoundingClientRect(), wr=wall.getBoundingClientRect();
+    sl=r.left-wr.left; st=r.top-wr.top;
+    el.style.cursor='grabbing'; el._dragHold=true;
+  });
+  el.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy, w=wall.clientWidth, h=wall.clientHeight, s=el.offsetWidth;
+    el.style.left = Math.max(0, Math.min(sl+dx, w-s)) + 'px';
+    el.style.top  = Math.max(0, Math.min(st+dy, h-s)) + 'px';
+  });
+  el.addEventListener('pointerup', (e)=>{
+    dragging=false; el.releasePointerCapture(e.pointerId); el.style.cursor='grab'; requestAnimationFrame(()=> el._dragHold=false);
+  });
+  el.addEventListener('pointercancel', ()=>{ dragging=false; el.style.cursor='grab'; el._dragHold=false; });
+}
+function shareTick(){
+  if(!shareTicking) return;
+  const W = wall.clientWidth, H = wall.clientHeight;
+  wall.querySelectorAll('.bubble').forEach(b=>{
+    if(b._dragHold) return;
+    const s=b.offsetWidth; let x=parseFloat(b.style.left), y=parseFloat(b.style.top);
+    x += b._vx; y += b._vy;
+    if (x < -s*0.05) x = W - s*0.95; if (x > W - s*0.95) x = -s*0.05;
+    if (y < -s*0.2)  y = H - s*0.8;  if (y > H - s*0.8)  y = -s*0.2;
+    b.style.left = x + 'px'; b.style.top = y + 'px';
+  });
+  shareAnimId = requestAnimationFrame(shareTick);
+}
+function startShare(){
+  if(shareTicking) return;
+  shareTicking=true;
+  if(!wall.querySelector('.bubble')){
+    for(let i=0;i<10;i++){
+      createBubble({ title:"User’s Work", likes:Math.floor(Math.random()*10), favs:Math.floor(Math.random()*8) });
+    }
+  }
+  shareAnimId = requestAnimationFrame(shareTick);
+}
+function stopShare(){
+  shareTicking=false;
+  if(shareAnimId){ cancelAnimationFrame(shareAnimId); shareAnimId=null; }
+}
+
+/* ========= DETAIL modal (JS 版本的留言纸条) ========= */
+const detailModal = document.getElementById('detail-modal');
+const leaveBtn = document.getElementById('btn-leave');
+const closeBtn = document.getElementById('btn-close');
+if (leaveBtn) leaveBtn.addEventListener('click', ()=>{
+  detailModal.style.display='block'; detailModal.setAttribute('aria-hidden','false');
+});
+if (closeBtn) closeBtn.addEventListener('click', ()=>{
+  detailModal.style.display='none'; detailModal.setAttribute('aria-hidden','true');
+});
+</script>
+</body>
+</html>
+
+
