@@ -1,18 +1,77 @@
+/* ================================
+   Top Navigation — Petals of Mind
+   ================================ */
+
 .top-nav{
-  position:sticky;
-  top:0;
-  display:flex;
-  gap:20px;
-  padding:12px 24px;
-  background:rgba(255,255,255,0.75);
-  backdrop-filter:blur(6px);
-  z-index:1000;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+
+  padding: 14px 28px;
+
+  /* matches your app’s soft beige aesthetic */
+  background: rgba(246, 236, 217, 0.78); /* var(--cream) with transparency */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+
+  z-index: 1200;
 }
+
+/* fallback for browsers without blur support */
+@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+  .top-nav{
+    background: var(--cream);
+  }
+}
+
+/* nav links */
 .top-nav a{
-  text-decoration:none;
-  font-weight:500;
-  color:#222;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+
+  padding: 8px 14px;
+  border-radius: 10px;
+
+  color: var(--ink);
+  transition: background .2s, opacity .2s, transform .15s, box-shadow .15s;
 }
+
+/* hover: soft glow */
 .top-nav a:hover{
-  opacity:.65;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+
+/* click/active press animation */
+.top-nav a:active{
+  transform: translateY(1px);
+  opacity: 0.8;
+}
+
+/* active page (optional) */
+.top-nav a.active{
+  background: var(--btn);
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+/* Mobile — horizontal scroll if many tabs */
+@media (max-width: 640px){
+  .top-nav{
+    gap: 14px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .top-nav::-webkit-scrollbar{
+    display: none;
+  }
 }
