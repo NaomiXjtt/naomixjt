@@ -30,14 +30,18 @@ This week’s focus was converting my previously static flower palette into a **
 - Updated architecture notes and file structure
 
 ### ✔️ Challenges
-- Integrating dynamic content with existing drag-and-drop logic
-- Positioning modal + toolbars consistently after generation
-- Ensuring scaling/transform logic still works with dynamically created nodes
+- ntegrating dynamic content with the existing drag-and-drop flow
+- Keeping modal/toolbars positioned correctly after dynamic insertion
+- Designing a clear UX for user-to-user comments (where to write, how to view, how to moderate)
+- Maintaining scale/transform logic on dynamically created nodes
+- Planning data structures/persistence for saving and loading user creations (IDs, thumbnails, metadata, comments)
 
 ### ✔️ What I plan for next week
-- Add search/filter for flowers
-- Improve ARIA labels for modals and draggable elements
-- Begin responsive adjustments for mobile screens
+- Comments UX: finalize interaction patterns for leaving/reading replies (inline bubble notes vs. detail-page thread) and implement the first version
+- Persistent gallery: build a gallery that stores user creations (title, image/snapshot, date, mood tags) and can be reloaded
+- Storage layer (phase 1): start with localStorage for save/load; design a simple JSON schema that can later swap to a backend
+- Share wall integration: connect saved items to the floating bubbles and the detail view
+-Basic moderation safeguards: minimum length, profanity placeholder filter, and delete/undo for the author
 
 ---
 
