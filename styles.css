@@ -1,77 +1,565 @@
-/* ================================
-   Top Navigation — Petals of Mind
-   ================================ */
-
-.top-nav{
-  position: sticky;
-  top: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-
-  padding: 14px 28px;
-
-  /* matches your app’s soft beige aesthetic */
-  background: rgba(246, 236, 217, 0.78); /* var(--cream) with transparency */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-
-  z-index: 1200;
+/* =========================================
+   Petals of Mind — Global Styles
+   ========================================= */
+:root{
+  --ink:#2b2b2b;
+  --cream:#F6ECD9;
+  --btn:#EAE3D8;
+  --bubble:#EEDBE4;
+  --bubble-border:#e0c8d6;
 }
 
-/* fallback for browsers without blur support */
-@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
-  .top-nav{
-    background: var(--cream);
+*,
+*::before,
+*::after{
+  box-sizing:border-box;
+}
+
+html, body{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  color:var(--ink);
+  font-family:"Poppins","Helvetica Neue",Arial,sans-serif;
+  background:var(--cream);        /* ✅ 改成纯色背景 */
+  /* 如果以后你还想加纹理背景，可以改成一个很淡的 pattern 图 */
+}
+
+body{
+  display:flex;
+  flex-direction:column;
+}
+
+.app{
+  width:100%;
+}
+
+/* Basic view switching */
+.view{
+  display:none;
+  padding:48px 16px;
+}
+.view.active{
+  display:block;
+}
+
+/* Main panels */
+.panel,
+.canvas{
+  max-width:1100px;
+  margin:0 auto 40px;
+  background:rgba(246,236,217,0.9);
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(0,0,0,0.1);
+  position:relative;
+}
+.panel{
+  padding:32px 32px 72px;
+}
+.canvas{
+  padding:32px 32px 72px;
+}
+
+/* Section titles */
+.title{
+  text-align:center;
+  margin:20px 0 16px;
+  font-weight:600;
+  letter-spacing:.5px;
+}
+
+/* Pill-style link buttons */
+.oval-link{
+  display:inline-block;
+  padding:10px 22px;
+  border-radius:999px;
+  background:var(--btn);
+  border:1px solid #d8cfc3;
+  color:var(--ink);
+  font-size:14px;
+  text-decoration:none;
+  cursor:pointer;
+}
+.oval-link:hover{
+  background:#f3ece2;
+}
+
+/* Soft transparent buttons */
+.ghost-btn{
+  appearance:none;
+  border:1px solid rgba(0,0,0,.2);
+  background:rgba(255,255,255,.85);
+  padding:8px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+}
+.ghost-btn:hover{
+  background:#fff;
+}
+
+/* Footer */
+footer{
+  text-align:center;
+  color:#888;
+  padding:18px 12px 24px;
+  font-size:12px;
+}
+
+/* =========================================
+   HOME — Drag & Arrange
+   ========================================= */
+#home header.banner{
+  max-width:1100px;
+  margin:0 auto 16px;
+  text-align:center;
+  background:rgba(255,255,255,.7);
+  border-radius:10px;
+  padding:10px 20px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+#home header h1{
+  margin:0;
+  font-size:22px;
+  font-weight:600;
+}
+#home header p{
+  margin:6px 0 0;
+  font-size:13px;
+  color:#444;
+}
+
+/* Stage + vase */
+#home .stage-wrap{
+  margin:0 auto;
+  width:min(92vw, 780px);
+  height:760px;
+  background:#F6ECD9;            /* ✅ 改成不透明 */
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,.08);
+  overflow:hidden;
+  position:relative;
+}
+#home .vase{
+  position:absolute;
+  bottom:45%;
+  left:52%;
+  transform:translate(-50%,60%);
+  width:min(74vw, 560px);
+  pointer-events:none;
+  user-select:none;
+  z-index:1;
+}
+
+/* Placed flower images (large) */
+#home .placed{
+  position:absolute;
+  cursor:grab;
+  user-select:none;
+  z-index:2;
+  display:grid;
+  place-items:center;
+  filter: drop-shadow(0 3px 8px rgba(0,0,0,.2));
+  transform-origin:center bottom;
+}
+#home .placed-img{
+  width:180px;
+  height:auto;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+
+/* Selected state highlight */
+#home .placed.selected{
+  outline:2px solid rgba(85,115,245,0.6);
+  outline-offset:2px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.22));
+}
+
+/* Palette container */
+#home .palette{
+  margin:12px auto 0;
+  max-width:1100px;
+  background:rgba(255,255,255,.85);
+  border:1px solid rgba(0,0,0,.1);
+  border-radius:12px;
+  padding:16px 12px 20px;
+}
+#home .chip-grid{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:12px;
+  margin:0 auto 12px;
+  width:95%;
+}
+#home .chip{
+  width:86px;
+  height:86px;
+  border-radius:12px;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(0,0,0,.12);
+  cursor:grab;
+  display:grid;
+  place-items:center;
+  position:relative;
+  transition:transform .12s, box-shadow .15s;
+  overflow:hidden;
+}
+#home .chip:active{
+  transform:scale(.94);
+}
+#home .chip img{
+  max-width:100%;
+  max-height:100%;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+}
+
+/* Flower-meaning “i” badge */
+#home .chip .chip-info{
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  line-height:1;
+  background:#fff;
+  border:1px solid rgba(0,0,0,.2);
+  color:#333;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+/* Stage tool bar */
+.stage-tools{
+  position:absolute;
+  display:none;
+  gap:6px;
+  background:rgba(255,255,255,.95);
+  border:1px solid rgba(0,0,0,.12);
+  border-radius:10px;
+  padding:6px;
+  z-index:999;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.stage-tools button{
+  appearance:none;
+  border:1px solid rgba(0,0,0,.18);
+  background:#fff;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+.stage-tools button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+/* Palette bottom buttons */
+#home .toolbar{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:4px;
+}
+
+/* =========================================
+   FLOWER — Single flower intro page
+   ========================================= */
+#flower .row{
+  display:flex;
+  gap:32px;
+  align-items:flex-start;
+}
+@media (max-width:900px){
+  #flower .row{
+    flex-direction:column;
+  }
+}
+#flower figure{
+  flex:1 1 55%;
+  margin:0;
+}
+#flower figure img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:12px;
+}
+#flower figcaption{
+  margin-top:8px;
+  color:#555;
+}
+#flower article{
+  flex:1 1 45%;
+  margin:0;
+}
+#flower .card{
+  background:#f5f1f6;
+  padding:20px 24px;
+  border-radius:12px;
+  border:1px solid #e7dff0;
+}
+#flower .back{
+  position:absolute;
+  top:16px;
+  left:16px;
+}
+
+/* =========================================
+   RESULT — Final bouquet + text feedback
+   ========================================= */
+#result .stage-wrap{
+  margin:0 auto 20px;
+  width:min(92vw, 780px);
+  height:760px;
+  background:#F6ECD9;            /* ✅ 不透明背景 */
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,.08);
+  overflow:hidden;
+  position:relative;
+}
+
+/* Bubble container (保留占位) */
+#result-bubbles{
+  position:relative;
+  margin:0 auto 18px;
+  width:min(94vw, 720px);
+  min-height:80px;
+}
+
+/* Bubble style */
+#result-bubbles .bubble{
+  position:absolute;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:16px;
+  font-size:14px;
+  line-height:1.35;
+  background:#e9d7df;
+  border:1px solid #e0c7d2;
+  color:#3a2f35;
+  box-shadow:0 6px 16px rgba(0,0,0,0.08);
+}
+
+/* Encouragement card */
+#result .enc{
+  position:relative;
+  margin:0 auto;
+  width:min(92%, 500px);
+  background:#eef1fb;
+  border:1px solid #d7def7;
+  border-radius:12px;
+  padding:16px 18px;
+}
+#result .enc p{
+  font-size:14px;
+  line-height:1.5;
+}
+
+#result .btn-row{
+  display:flex;
+  gap:16px;
+  justify-content:center;
+  align-items:center;
+  margin-top:18px;
+}
+#result .share-top{
+  position:absolute;
+  right:16px;
+  top:16px;
+}
+
+/* =========================================
+   SHARE — Bouquet Diary list
+   ========================================= */
+#share .title{
+  margin-top:24px;
+}
+#share .home-link{
+  position:absolute;
+  top:16px;
+  right:16px;
+}
+
+/* Diary list container */
+#diary-list{
+  margin-top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Single diary card */
+.diary-item{
+  background:var(--bubble);
+  border:1px solid var(--bubble-border);
+  border-radius:10px;
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  transition:background .15s, transform .12s, box-shadow .15s;
+  font-size:14px;
+  gap:8px;
+}
+.diary-item:hover{
+  background:#f5e7f0;
+  transform:translateY(-1px);
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+.diary-item .meta{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.diary-item .label{
+  font-weight:500;
+}
+.diary-item .date{
+  font-size:12px;
+  opacity:.8;
+}
+.diary-item .tag{
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #e6dbe2;
+}
+
+/* Delete button inside diary card */
+.diary-item .delete-btn{
+  border:none;
+  background:transparent;
+  font-size:16px;
+  cursor:pointer;
+  padding:4px 6px;
+  line-height:1;
+  opacity:.6;
+}
+.diary-item .delete-btn:hover{
+  opacity:1;
+}
+
+/* =========================================
+   DETAIL — Single bouquet + diary text
+   ========================================= */
+#detail .row{
+  display:flex;
+  gap:60px;
+  justify-content:center;
+  align-items:flex-start;
+}
+@media (max-width:900px){
+  #detail .row{
+    flex-direction:column;
+    gap:24px;
   }
 }
 
-/* nav links */
-.top-nav a{
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 15px;
-
-  padding: 8px 14px;
-  border-radius: 10px;
-
-  color: var(--ink);
-  transition: background .2s, opacity .2s, transform .15s, box-shadow .15s;
+/* Stage on the detail page */
+#detail figure{
+  margin:0 auto;
+  width:min(92vw, 780px);
+  height:760px;
+  background:#F6ECD9;            /* ✅ 不透明背景 */
+  border-radius:20px;
+  box-shadow:0 0 20px rgba(0,0,0,.08);
+  overflow:hidden;
+  display:block;
 }
 
-/* hover: soft glow */
-.top-nav a:hover{
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  transform: translateY(-1px);
+/* Stage container inside detail */
+.detail-stage{
+  width:100%;
+  height:100%;
+  position:relative;
+  overflow:hidden;
 }
 
-/* click/active press animation */
-.top-nav a:active{
-  transform: translateY(1px);
-  opacity: 0.8;
+#detail article{
+  width:420px;
+}
+#detail .story-card{
+  width:100%;
+  min-height:420px;
+  background:#EEDBE4;
+  border:1px solid #e0c8d6;
+  border-radius:8px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+}
+#detail .story-card p{
+  margin:8px 0;
+  line-height:1.55;
+  font-size:14px;
 }
 
-/* active page (optional) */
-.top-nav a.active{
-  background: var(--btn);
-  border: 1px solid rgba(0,0,0,0.12);
+/* System encouragement text */
+#detail-enc{
+  font-weight:500;
 }
 
-/* Mobile — horizontal scroll if many tabs */
-@media (max-width: 640px){
-  .top-nav{
-    gap: 14px;
-    padding: 12px 16px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+/* User diary text */
+#detail-note{
+  white-space:pre-wrap;
+}
+
+/* Bottom navigation in detail */
+#detail .navs{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+
+/* JS-driven diary modal */
+.modal-js{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:min(92vw, 520px);
+  background:#fff;
+  border:1px solid #e5e1da;
+  border-radius:10px;
+  box-shadow:0 12px 30px rgba(0,0,0,.18);
+  padding:16px;
+  display:none;
+  z-index:9999;
+}
+
+/* Responsive tweaks */
+@media (max-width:600px){
+  .panel,
+  .canvas{
+    padding:20px 16px 56px;
   }
-  .top-nav::-webkit-scrollbar{
-    display: none;
+  #home .stage-wrap,
+  #result .stage-wrap{
+    height:640px;
+  }
+  #detail figure{
+    width:100%;
+    height:640px;
+  }
+  #detail article{
+    width:100%;
   }
 }

@@ -1,264 +1,218 @@
-/* =========================================================
-   Petals of Mind — script.js (full)
-   - Data-driven palette + modals (meets assignment)
-   - Drag & drop arrange, select, scale, z-index, delete
-   - Keyboard shortcuts, tool panel positioning
-   - Result page: render final arrangement + encouragement
-   - Share page: floating bubbles + reactions
-   - Detail modal: open/close
-   - Simple view router
-   ========================================================= */
+/* =======================
+   Petals of Mind — core
+   ======================= */
 
-/* -------------------- 0) Simple Router -------------------- */
-const VIEWS = ["home", "flower", "result", "share", "detail"];
-function showView(id) {
-  VIEWS.forEach(v =>
-    document.getElementById(v)?.classList.toggle("active", v === id)
-  );
-  if (id === "share") startShare(); else stopShare();
-  if (id === "home") requestAnimationFrame(positionToolsNearVase);
+/* Flower data (you can keep extending) */
+const FLOWER_DATA = {
+  Camellia: {
+    meaning: "Steadfast love, admiration, quiet strength.",
+    enc: "Your calm devotion is enough; keep showing up for yourself."
+  },
+  Daisy: {
+    meaning: "Fresh starts, sincerity, simple joy.",
+    enc: "Start small and honest—clarity grows when you begin."
+  }
+  // … add more flowers here if you like
+};
+
+/* ---------- Global state ---------- */
+
+let currentArrangement = [];
+let currentUsedFlowers = [];
+let currentSnapshot = "";     // PNG dataURL of the current bouquet
+
+let selected = null;
+let zCounter = 20;
+
+/* Diary data */
+let diaryItems = [];
+let currentDetailId = null;
+
+/* Small helpers */
+function uid() {
+  return Math.random().toString(36).slice(2, 9);
 }
-document.addEventListener("click", (e) => {
-  const nav = e.target.closest("[data-nav]");
-  if (!nav) return;
-  e.preventDefault();
-  showView(nav.getAttribute("data-nav"));
+function formatDate(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/* =======================
+   Simple view router
+   ======================= */
+
+const views = ["home", "flower", "result", "share", "detail"];
+
+function showView(id) {
+  views.forEach(v => {
+    const el = document.getElementById(v);
+    if (!el) return;
+    el.classList.toggle("active", v === id);
+  });
+
+  if (id === "home") {
+    requestAnimationFrame(positionToolsNearVase);
+  }
+  if (id === "share") {
+    buildDiaryList();
+  }
+}
+
+document.querySelectorAll("[data-nav]").forEach(a => {
+  a.addEventListener("click", e => {
+    e.preventDefault();
+    const target = a.getAttribute("data-nav");
+    showView(target);
+  });
 });
 
-/* -------------------- 1) Data Array -------------------- */
-const FLOWERS = [
-  { id: "camellia",  name: "Camellia",  img: "https://i.postimg.cc/wB0M8j5T/Camilia-no-bg.png",
-    meaning: "Steadfast love, admiration, quiet strength.",
-    encouragement: "Your calm devotion is enough; keep showing up for yourself, gently and consistently.",
-    mood: "comfort" },
+/* =======================
+   HOME: drag & flower ops
+   ======================= */
 
-  { id: "craneflower", name: "Crane Flower", img: "https://i.postimg.cc/ZqVnt5P0/Crane-flower-no-bg.png",
-    meaning: "Celebration, freedom, confident uniqueness.",
-    encouragement: "Let your colors show—your differences are your power.",
-    mood: "joy" },
-
-  { id: "daisy", name: "Daisy", img: "https://i.postimg.cc/252yRSdy/Daisy-no-bg.png",
-    meaning: "Fresh starts, sincerity, simple joy.",
-    encouragement: "Start small and honest—clarity grows when you begin.",
-    mood: "clarity" },
-
-  { id: "gladioli", name: "Gladioli", img: "https://i.postimg.cc/6QYqJpV3/Gladioli-no-bg.png",
-    meaning: "Courage, resilience, integrity.",
-    encouragement: "Hold your ground—your values are your compass.",
-    mood: "strength" },
-
-  { id: "hyacinth", name: "Hyacinth", img: "https://i.postimg.cc/LsN5K8kn/hyacinth-no-bg.png",
-    meaning: "Renewal and heartfelt words.",
-    encouragement: "Say what you feel—new growth begins with truth.",
-    mood: "renewal" },
-
-  { id: "hydrangea", name: "Hydrangea", img: "https://i.postimg.cc/N0pFqj8y/Hydrangea-no-bg.png",
-    meaning: "Gratitude, empathy, layered feelings.",
-    encouragement: "Be proud of your depth—your feelings are valid and wise.",
-    mood: "calm" },
-
-  { id: "iris", name: "Iris", img: "https://i.postimg.cc/SsRsybVm/Iris-no-bg.png",
-    meaning: "Hope and vision; a bridge to clarity.",
-    encouragement: "Trust the bigger picture—your path is unfolding.",
-    mood: "hope" },
-
-  { id: "jasmine", name: "Jasmine", img: "https://i.postimg.cc/rmsm82gM/Jasmin-no-bg.png",
-    meaning: "Comfort, tenderness, faithful affection.",
-    encouragement: "Let gentleness be your strength today.",
-    mood: "comfort" },
-
-  { id: "lily", name: "Lily", img: "https://i.postimg.cc/85c51gw1/Lily-no-bg.png",
-    meaning: "Purity, sincerity, gentle renewal.",
-    encouragement: "Breathe—today is allowed to be a clean page.",
-    mood: "renewal" },
-
-  { id: "lilyvalley", name: "Lily of the Valley", img: "https://i.postimg.cc/Hxnxp13Y/lily-of-the-valley-no-bg.png",
-    meaning: "Humility, comfort, quiet joy.",
-    encouragement: "Small, steady kindness counts—toward others and yourself.",
-    mood: "comfort" },
-
-  { id: "lotus", name: "Lotus", img: "https://i.postimg.cc/DZ0Z235y/Lotus-no-bg.png",
-    meaning: "Resilience and awakening; rising clean from the mud.",
-    encouragement: "You are growing even when it feels messy—keep rising.",
-    mood: "calm" },
-
-  { id: "narcissus", name: "Narcissus", img: "https://i.postimg.cc/QtCtXZSd/narcissus-no-bg.png",
-    meaning: "Self-respect and new beginnings.",
-    encouragement: "Choose what nourishes you—new chapters welcome you.",
-    mood: "clarity" },
-
-  { id: "nightbloom", name: "Night Blooming Cereus", img: "https://i.postimg.cc/Jn0n1CKh/night-blooming-cereus-no-bg.png",
-    meaning: "Rarity and wonder; precious brief moments.",
-    encouragement: "Treasure your small wins—brief light still warms.",
-    mood: "hope" },
-
-  { id: "orchid", name: "Orchid", img: "https://i.postimg.cc/mDkDbWVD/Orchid-no-ng.png",
-    meaning: "Grace and quiet strength.",
-    encouragement: "Your softness is not weakness—it’s well-trained strength.",
-    mood: "calm" },
-
-  { id: "osmanthus", name: "Osmanthus", img: "https://i.postimg.cc/XJqJV6xq/Osmanthus-no-bg.png",
-    meaning: "Warmth, harmony, fragrant memories.",
-    encouragement: "Let comfort guide you back to what feels like home.",
-    mood: "comfort" },
-
-  { id: "peony", name: "Peony", img: "https://i.postimg.cc/rmsm82gz/peony-no-bg.png",
-    meaning: "Prosperity and compassion.",
-    encouragement: "There’s room for you to bloom big—take up space kindly.",
-    mood: "strength" },
-
-  { id: "rosalia", name: "Rosalia", img: "https://i.postimg.cc/QtCtXZSB/Rosalia-no-bg.png",
-    meaning: "Celebration and remembrance.",
-    encouragement: "Carry your memories gently—they can coexist with delight.",
-    mood: "joy" },
-
-  { id: "rose", name: "Rose", img: "https://i.postimg.cc/85c51gwJ/Roses-no-bg.png",
-    meaning: "Love and the courage of the heart.",
-    encouragement: "It’s brave to care—keep tending what matters to you.",
-    mood: "strength" },
-
-  { id: "sunflower", name: "Sunflower", img: "https://i.postimg.cc/bJrJzfLt/Sunflowers-no-bg.png",
-    meaning: "Optimism and loyalty.",
-    encouragement: "Look for the warm spot—your attention is a superpower.",
-    mood: "joy" },
-
-  { id: "tulips", name: "Tulips", img: "https://i.postimg.cc/B6b6qfN1/Tulips.png",
-    meaning: "Sincerity and gentle joy.",
-    encouragement: "Let simple joys count—they add up to real balance.",
-    mood: "joy" }
-];
-
-/* -------------------- 2) Render chips + modals -------------------- */
-function renderPalette(data) {
-  const grid = document.getElementById("home-palette");
-  if (!grid) return;
-  grid.innerHTML = "";
-  data.forEach(item => {
-    const chip = document.createElement("div");
-    chip.className = "chip";
-    chip.draggable = true;
-    chip.dataset.name = item.name;
-    chip.dataset.src  = item.img;
-    chip.title = item.name;
-
-    const img = document.createElement("img");
-    img.src = item.img; img.alt = item.name; img.draggable = false;
-
-    const info = document.createElement("a");
-    info.className = "chip-info";
-    info.href = `#m-${item.id}`;
-    info.setAttribute("aria-label", `${item.name} meaning`);
-    info.draggable = false;
-    info.textContent = "i";
-
-    chip.appendChild(img);
-    chip.appendChild(info);
-    grid.appendChild(chip);
-  });
-}
-
-function renderModals(data) {
-  let mount = document.getElementById("flower-modals");
-  if (!mount) {
-    mount = document.createElement("div");
-    mount.id = "flower-modals";
-    document.body.appendChild(mount);
-  }
-  mount.innerHTML = "";
-
-  data.forEach(item => {
-    const section = document.createElement("section");
-    section.id = `m-${item.id}`;
-    section.className = "modal";
-    section.setAttribute("role", "dialog");
-    section.setAttribute("aria-labelledby", `m-${item.id}-title`);
-
-    section.innerHTML = `
-      <a class="modal-scrim" href="#"></a>
-      <div class="modal-card">
-        <header>
-          <h3 id="m-${item.id}-title">${item.name} — ${item.meaning.split(".")[0].toLowerCase()}</h3>
-          <a class="close" href="#">×</a>
-        </header>
-        <div class="body">
-          <img src="${item.img}" alt="${item.name}">
-          <div class="meta">
-            <h4>Meaning</h4><p>${item.meaning}</p>
-            <h4>Encouragement</h4><p>${item.encouragement}</p>
-          </div>
-        </div>
-      </div>
-    `;
-    mount.appendChild(section);
-  });
-}
-
-/* -------------------- 3) Home interactions -------------------- */
 const homeStage   = document.getElementById("home-stage");
 const homePalette = document.getElementById("home-palette");
 const btnClear    = document.getElementById("btn-clear");
 const btnFinish   = document.getElementById("btn-finish");
 const tools       = document.getElementById("stageTools");
-const vaseImg     = document.querySelector("#home-stage .vase");
 
-let selected = null;
-let zCounter = 10;
+/* Prevent tools from triggering stage mousedown */
+if (tools) {
+  tools.addEventListener("mousedown", e => {
+    e.stopPropagation();
+  });
+}
 
-// Clear / Finish
-btnClear?.addEventListener("click", () => {
-  [...homeStage.querySelectorAll(".placed")].forEach(el => el.remove());
-  setSelected(null);
-});
-btnFinish?.addEventListener("click", () => {
-  buildResultFromHome();
-  showView("result");
-});
+/* ----- Clear / Finish ----- */
 
-// Drag from palette
-homePalette?.addEventListener("dragstart", (e) => {
-  const chip = e.target.closest(".chip"); if (!chip) return;
-  e.dataTransfer.setData("text/plain", JSON.stringify({
-    src: chip.dataset.src, name: chip.dataset.name
-  }));
-});
+if (btnClear) {
+  btnClear.addEventListener("click", () => {
+    [...homeStage.querySelectorAll(".placed")].forEach(el => el.remove());
+    setSelected(null);
+    currentArrangement = [];
+    currentUsedFlowers = [];
+    currentSnapshot = "";
+  });
+}
 
-homeStage?.addEventListener("dragover", (e) => e.preventDefault());
-homeStage?.addEventListener("drop", (e) => {
-  e.preventDefault();
-  const raw = e.dataTransfer.getData("text/plain");
-  if (!raw) return;
-  const { src, name } = JSON.parse(raw);
-  const rect = homeStage.getBoundingClientRect();
-  addPlacedImage({ src, name, x: e.clientX - rect.left, y: e.clientY - rect.top });
-});
+/* Finish = capture arrangement + snapshot then go to Result */
+if (btnFinish) {
+  btnFinish.addEventListener("click", async () => {
+    const placed = homeStage.querySelectorAll(".placed");
+    if (!placed.length) {
+      alert("Try adding some flowers to the vase first ✿");
+      return;
+    }
 
-// selection helpers
+    // 1. record positions + flowers
+    captureArrangement();
+
+    // 2. take snapshot with html2canvas
+    try {
+      const canvas = await html2canvas(homeStage, {
+        backgroundColor: '#F6ECD9',  // ✅ 不再透明，避免把 body 背景截进去
+        useCORS: true,
+        scale: 2
+      });
+      currentSnapshot = canvas.toDataURL("image/png");
+      const resultImg = document.getElementById("result-img");
+      if (resultImg) {
+        resultImg.src = currentSnapshot;
+      }
+    } catch (err) {
+      console.error("Snapshot failed:", err);
+      currentSnapshot = "";
+    }
+
+    // 3. build encouragement text + show Result
+    buildResultView();
+    showView("result");
+  });
+}
+
+/* ----- Dragging from palette ----- */
+
+if (homePalette) {
+  homePalette.addEventListener("dragstart", e => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    e.dataTransfer.setData(
+      "text/plain",
+      JSON.stringify({
+        src: chip.dataset.src,
+        name: chip.dataset.name
+      })
+    );
+  });
+}
+
+if (homeStage) {
+  homeStage.addEventListener("dragover", e => e.preventDefault());
+
+  homeStage.addEventListener("drop", e => {
+    e.preventDefault();
+    const raw = e.dataTransfer.getData("text/plain");
+    if (!raw) return;
+    const { src, name } = JSON.parse(raw);
+    const rect = homeStage.getBoundingClientRect();
+    addPlacedImage({
+      src,
+      name,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+  });
+
+  // click blank stage to clear selection (clicking tools does nothing)
+  homeStage.addEventListener("mousedown", e => {
+    if (e.target.closest("#stageTools")) return;
+    if (!e.target.closest(".placed")) {
+      setSelected(null);
+    }
+  });
+}
+
+/* =======================
+   selection / transform / z-index
+   ======================= */
+
+function applyTransform(box) {
+  const scale = parseFloat(box.dataset.scale || "1");
+  const rot   = parseFloat(box.dataset.rotation || "0");
+  box.style.transformOrigin = "50% 100%";
+  box.style.transform = `scale(${scale}) rotate(${rot}deg)`;
+}
+
 function setSelected(el) {
-  if (selected && selected.isConnected) selected.classList.remove("selected");
-  selected = el || null;
+  if (selected && selected.isConnected) {
+    selected.classList.remove("selected");
+  }
+  selected = el;
   if (selected) {
     selected.classList.add("selected");
-    tools.style.display = "flex";
-    updateToolButtons();
-    positionToolsNearVase();
-  } else {
+    if (tools) {
+      tools.style.display = "flex";
+      updateToolButtons();
+      positionToolsNearVase();
+    }
+  } else if (tools) {
     tools.style.display = "none";
   }
 }
 
-homeStage?.addEventListener("mousedown", (e) => {
-  if (!e.target.closest(".placed")) setSelected(null);
-});
+/* Create one placed flower */
 
 function addPlacedImage({ src, name, x, y }) {
   const box = document.createElement("div");
   box.className = "placed";
-  box.style.left = (x - 90) + "px";   // default width ~180
-  box.style.top  = (y - 90) + "px";
+  box.style.position = "absolute";
+  box.style.left = x - 90 + "px";
+  box.style.top  = y - 90 + "px";
   box.style.zIndex = ++zCounter;
-  box.dataset.scale = "1";
-  box.dataset.src = src;
-  box.dataset.name = name || "Flower";
+  box.dataset.scale    = "1";
+  box.dataset.rotation = "0";
 
   const img = document.createElement("img");
   img.className = "placed-img";
@@ -266,314 +220,429 @@ function addPlacedImage({ src, name, x, y }) {
   img.alt = name || "Flower";
   box.appendChild(img);
 
+  applyTransform(box);
   homeStage.appendChild(box);
 
-  // select / remove
-  box.addEventListener("click", (e) => { e.stopPropagation(); setSelected(box); });
-  box.addEventListener("dblclick", () => { if (selected === box) setSelected(null); box.remove(); });
+  box.addEventListener("click", e => {
+    e.stopPropagation();
+    setSelected(box);
+  });
 
-  // wheel scale
-  box.addEventListener("wheel", (e) => {
-    if (selected !== box) return;
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.08 : -0.08;
-    scaleSelectedBy(delta);
-    positionToolsNearVase();
-  }, { passive: false });
+  box.addEventListener("dblclick", () => {
+    if (selected === box) setSelected(null);
+    box.remove();
+  });
 
-  // drag within stage
+  // wheel to scale
+  box.addEventListener(
+    "wheel",
+    e => {
+      if (selected !== box) return;
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      scaleSelectedBy(delta);
+      positionToolsNearVase();
+    },
+    { passive: false }
+  );
+
   enableDragWithin(box, homeStage);
 }
 
+/* Drag logic */
+
 function enableDragWithin(el, container) {
-  let dragging = false, ox = 0, oy = 0;
-  el.style.cursor = "grab";
-  el.addEventListener("mousedown", (e) => {
-    dragging = true; ox = e.offsetX; oy = e.offsetY; el.style.cursor = "grabbing";
-    setSelected(el);
+  let dragging = false;
+  let ox = 0, oy = 0;
+
+  el.addEventListener("mousedown", e => {
+    dragging = true;
+    ox = e.offsetX;
+    oy = e.offsetY;
+    el.style.cursor = "grabbing";
+    if (container === homeStage) {
+      setSelected(el);
+    }
   });
-  document.addEventListener("mousemove", (e) => {
+
+  document.addEventListener("mousemove", e => {
     if (!dragging) return;
     const rect = container.getBoundingClientRect();
-    el.style.left = (e.clientX - rect.left - ox) + "px";
-    el.style.top  = (e.clientY - rect.top  - oy) + "px";
+    el.style.left = e.clientX - rect.left - ox + "px";
+    el.style.top  = e.clientY - rect.top  - oy + "px";
   });
-  document.addEventListener("mouseup", () => { dragging = false; el.style.cursor = "grab"; });
+
+  document.addEventListener("mouseup", () => {
+    dragging = false;
+    el.style.cursor = "grab";
+  });
 }
 
-/* ---- tool buttons ---- */
-const btnSmaller = document.getElementById("btnSmaller");
-const btnBigger  = document.getElementById("btnBigger");
-const btnFront   = document.getElementById("btnFront");
-const btnBack    = document.getElementById("btnBack");
-const btnDelete  = document.getElementById("btnDelete");
+/* =======================
+   tools binding
+   ======================= */
 
-btnSmaller?.addEventListener("click", () => scaleSelectedBy(-0.08));
-btnBigger ?.addEventListener("click", () => scaleSelectedBy(+0.08));
-btnFront  ?.addEventListener("click", () => bringToFront());
-btnBack   ?.addEventListener("click", () => sendToBack());
-btnDelete ?.addEventListener("click", () => deleteSelected());
+const btnSmaller     = document.getElementById("btnSmaller");
+const btnBigger      = document.getElementById("btnBigger");
+const btnRotateLeft  = document.getElementById("btnRotateLeft");
+const btnRotateRight = document.getElementById("btnRotateRight");
+const btnFront       = document.getElementById("btnFront");
+const btnBack        = document.getElementById("btnBack");
+const btnDelete      = document.getElementById("btnDelete");
+
+if (btnSmaller)     btnSmaller.addEventListener("click", () => scaleSelectedBy(-0.08));
+if (btnBigger)      btnBigger .addEventListener("click", () => scaleSelectedBy(+0.08));
+if (btnRotateLeft)  btnRotateLeft .addEventListener("click", () => rotateSelectedBy(-15));
+if (btnRotateRight) btnRotateRight.addEventListener("click", () => rotateSelectedBy(+15));
+if (btnFront)       btnFront  .addEventListener("click", () => bringToFront());
+if (btnBack)        btnBack   .addEventListener("click", () => sendToBack());
+if (btnDelete)      btnDelete .addEventListener("click", () => deleteSelected());
 
 function updateToolButtons() {
   const on = !!selected;
-  [btnSmaller, btnBigger, btnFront, btnBack, btnDelete].forEach(b => b && (b.disabled = !on));
+  [
+    btnSmaller,
+    btnBigger,
+    btnRotateLeft,
+    btnRotateRight,
+    btnFront,
+    btnBack,
+    btnDelete
+  ].forEach(b => {
+    if (!b) return;
+    b.disabled = !on;
+  });
 }
+
+/* scale */
 
 function scaleSelectedBy(delta) {
   if (!selected) return;
   const cur = parseFloat(selected.dataset.scale || "1");
-  let next = Math.max(0.4, Math.min(2.6, cur + delta));
+  const next = Math.max(0.4, Math.min(2.6, cur + delta));
   selected.dataset.scale = String(next);
-  selected.style.transformOrigin = "center bottom";
-  selected.style.transform = `scale(${next})`;
+  applyTransform(selected);
 }
+
+/* rotate */
+
+function rotateSelectedBy(deltaDeg) {
+  if (!selected) return;
+  const cur = parseFloat(selected.dataset.rotation || "0");
+  const next = cur + deltaDeg;
+  selected.dataset.rotation = String(next);
+  applyTransform(selected);
+}
+
+/* z-index */
 
 function bringToFront() {
   if (!selected) return;
   selected.style.zIndex = ++zCounter;
 }
+
 function sendToBack() {
   if (!selected) return;
-  const minZ = 2; // vase is 1
-  const current = parseInt(selected.style.zIndex || zCounter, 10);
-  selected.style.zIndex = Math.max(minZ, current - 10);
+  const others = [...homeStage.querySelectorAll(".placed")].filter(
+    el => el !== selected
+  );
+  const minZ = others.length
+    ? Math.min(...others.map(el => parseInt(el.style.zIndex || "20", 10)))
+    : 1;
+  selected.style.zIndex = minZ - 1;
 }
+
+/* delete */
+
 function deleteSelected() {
   if (!selected) return;
-  const n = selected; setSelected(null); n.remove();
+  const node = selected;
+  setSelected(null);
+  node.remove();
 }
 
-/* ---- keyboard shortcuts ---- */
-document.addEventListener("keydown", (e) => {
+/* keyboard shortcuts */
+
+document.addEventListener("keydown", e => {
   if (!selected) return;
-  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); deleteSelected(); }
-  if (e.key === "[") { e.preventDefault(); scaleSelectedBy(-0.08); }
-  if (e.key === "]") { e.preventDefault(); scaleSelectedBy(+0.08); }
-  if (e.key === ".") { e.preventDefault(); bringToFront(); }
-  if (e.key === ",") { e.preventDefault(); sendToBack(); }
+
+  if (e.key === "Delete" || e.key === "Backspace") {
+    e.preventDefault();
+    deleteSelected();
+  }
+  if (e.key === "[") {
+    e.preventDefault();
+    scaleSelectedBy(-0.08);
+  }
+  if (e.key === "]") {
+    e.preventDefault();
+    scaleSelectedBy(+0.08);
+  }
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    rotateSelectedBy(-5);
+  }
+  if (e.key === "ArrowRight") {
+    e.preventDefault();
+    rotateSelectedBy(+5);
+  }
 });
 
-/* ---- tool panel position (float near vase) ---- */
+/* =======================
+   Tool position near vase
+   ======================= */
+
 function positionToolsNearVase() {
-  const tools = document.getElementById("stageTools");
-  const vase  = document.querySelector("#home-stage .vase");
-  if (!tools || !vase) return;
+  const vase = document.querySelector("#home-stage .vase");
+  if (!tools || !vase || !homeStage) return;
+
   const stageRect = homeStage.getBoundingClientRect();
   const vaseRect  = vase.getBoundingClientRect();
+
   let x = vaseRect.right - stageRect.left + 12;
   let y = vaseRect.top   - stageRect.top  + vaseRect.height * 0.35;
 
-  const prev = tools.style.display;
   tools.style.display = "flex";
-  const tw = tools.offsetWidth, th = tools.offsetHeight, pad = 8;
-  if (x + tw > homeStage.clientWidth - pad) x = Math.max(pad, homeStage.clientWidth - pad - tw);
-  if (y + th > homeStage.clientHeight - pad) y = Math.max(pad, homeStage.clientHeight - pad - th);
+  const tw  = tools.offsetWidth;
+  const th  = tools.offsetHeight;
+  const pad = 8;
+
+  if (x + tw > homeStage.clientWidth - pad)
+    x = Math.max(pad, homeStage.clientWidth - pad - tw);
+  if (y + th > homeStage.clientHeight - pad)
+    y = Math.max(pad, homeStage.clientHeight - pad - th);
   if (y < pad) y = pad;
 
   tools.style.left = x + "px";
   tools.style.top  = y + "px";
+
   if (!selected) tools.style.display = "none";
 }
-if (vaseImg && !vaseImg.complete) vaseImg.addEventListener("load", positionToolsNearVase);
-else positionToolsNearVase();
+
+const vaseImg = document.querySelector("#home-stage .vase");
+if (vaseImg && !vaseImg.complete) {
+  vaseImg.addEventListener("load", positionToolsNearVase);
+} else {
+  positionToolsNearVase();
+}
 window.addEventListener("resize", positionToolsNearVase);
 
-/* -------------------- 4) Result page build -------------------- */
-const resultStage = document.getElementById("result-stage");
-const resultBubbles = document.getElementById("result-bubbles");
+/* =======================
+   Arrangement recording
+   ======================= */
+
 const resultEncText = document.getElementById("result-enc-text");
 
-document.getElementById("btn-save")?.addEventListener("click", () => {
-  alert("Save Image (placeholder). You can add html2canvas in the future to export.");
-});
+/* Collect current placed flowers from home-stage */
+function captureArrangement() {
+  const boxes = [...homeStage.querySelectorAll(".placed")];
 
-/* 将 home-stage 的摆放克隆到 result-stage，并生成文案气泡与鼓励语 */
-function buildResultFromHome() {
-  // 清空 result
-  resultStage.querySelectorAll(".placed").forEach(n => n.remove());
-  resultBubbles.innerHTML = "";
-  resultEncText.textContent = "";
-
-  // 统计 bouquet 组成（用于文案）
-  const counts = {}; // name -> { count, mood, meaning }
-  const paletteBySrc = Object.fromEntries(FLOWERS.map(f => [f.img, f]));
-
-  // 克隆元素
-  const homeRect = homeStage.getBoundingClientRect();
-  const resultRect = resultStage.getBoundingClientRect();
-  const scaleX = resultRect.width / homeRect.width;
-  const scaleY = resultRect.height / homeRect.height;
-
-  homeStage.querySelectorAll(".placed").forEach(srcEl => {
-    const clone = document.createElement("div");
-    clone.className = "placed";
-    const img = document.createElement("img");
-    img.className = "placed-img";
-    img.src = srcEl.dataset.src || srcEl.querySelector("img")?.src || "";
-    img.alt = srcEl.dataset.name || "Flower";
-    clone.appendChild(img);
-
-    // 位置 / 缩放 / 层级
-    const left = parseFloat(srcEl.style.left) || 0;
-    const top  = parseFloat(srcEl.style.top)  || 0;
-    const z    = parseInt(srcEl.style.zIndex|| 10, 10);
-    const k    = parseFloat(srcEl.dataset.scale || "1");
-
-    clone.style.left = (left * scaleX) + "px";
-    clone.style.top  = (top  * scaleY) + "px";
-    clone.style.zIndex = z;
-    clone.dataset.scale = k;
-    clone.style.transformOrigin = "center bottom";
-    clone.style.transform = `scale(${k})`;
-
-    resultStage.appendChild(clone);
-
-    // 统计
-    const meta = paletteBySrc[img.src] || {};
-    const key = meta.name || img.alt;
-    if (!counts[key]) counts[key] = { count: 0, mood: meta.mood || "calm", meaning: meta.meaning || "" };
-    counts[key].count++;
+  currentArrangement = boxes.map(box => {
+    const img = box.querySelector("img");
+    return {
+      src: img.src,
+      name: img.alt || "Flower",
+      x: parseFloat(box.style.left) || 0,
+      y: parseFloat(box.style.top)  || 0,
+      scale: parseFloat(box.dataset.scale || "1"),
+      rotation: parseFloat(box.dataset.rotation || "0"),
+      z: parseInt(box.style.zIndex || "20", 10)
+    };
   });
 
-  // 选出出现次数最多的 3 种花，生成气泡
-  const top3 = Object.entries(counts)
-    .sort((a,b) => b[1].count - a[1].count)
-    .slice(0,3);
+  currentUsedFlowers = [...new Set(currentArrangement.map(f => f.name))];
+}
 
-  top3.forEach(([name, data], idx) => {
-    const bubble = document.createElement("section");
-    bubble.className = "bubble dyn";
-    bubble.style.setProperty("--i", idx+1); // 若你的 CSS 用到
-    const p = document.createElement("p");
-    p.style.margin = "0";
-    p.textContent = `${name}: ${data.meaning || "—"}`;
-    bubble.appendChild(p);
-    resultBubbles.appendChild(bubble);
-  });
+/* Result page: only builds encouragement text now */
+function buildResultView() {
+  const msgs = currentUsedFlowers
+    .map(n => FLOWER_DATA[n]?.enc)
+    .filter(Boolean);
 
-  // 生成 Encouragement（根据主导情绪）
-  const moodScores = {};
-  Object.values(counts).forEach(v => {
-    moodScores[v.mood] = (moodScores[v.mood] || 0) + v.count;
-  });
-  const mainMood = Object.entries(moodScores).sort((a,b)=>b[1]-a[1])[0]?.[0] || "calm";
-  const moodToEnc = {
-    calm:   "Your bouquet carries steadiness and peace. Trust the gentle pace—you’re already moving.",
-    joy:    "This bouquet radiates bright, playful energy. Let yourself celebrate small wins today.",
-    renewal:"I see fresh air and clean pages here. Breathe in, and begin from where you are.",
-    strength:"There’s firm ground under you. Your values and courage keep the shape together.",
-    clarity:"Simple truths shine in your bouquet. Naming what matters will keep you focused.",
-    hope:   "Light gathers at the edges. Keep orienting toward what warms and guides you.",
-    comfort:"Soft presence and care weave this together. Be kind to yourself like you are to others."
+  let text;
+  if (!msgs.length) {
+    text = "You created something uniquely yours. That's already enough.";
+  } else if (msgs.length === 1) {
+    text = msgs[0];
+  } else {
+    text = msgs.slice(0, 3).join(" ");
+  }
+
+  if (resultEncText) resultEncText.textContent = text;
+}
+
+/* =======================
+   Bouquet Diary
+   ======================= */
+
+const diaryList       = document.getElementById("diary-list");
+const btnSaveToDiary  = document.getElementById("btn-save");
+
+const detailView      = document.getElementById("detail");
+const detailEncP      = detailView ? detailView.querySelector("#detail-enc") : null;
+const detailNoteP     = detailView ? detailView.querySelector("#detail-note") : null;
+const detailImg       = document.getElementById("detail-img");
+
+/* Save current bouquet as a diary entry */
+function addCurrentToDiary() {
+  if (!currentArrangement || !currentArrangement.length) {
+    alert("Finish your bouquet first, then save it to your diary ✿");
+    return;
+  }
+
+  if (!currentSnapshot) {
+    alert("Something went wrong with the snapshot. Please try tapping Finish again.");
+    return;
+  }
+
+  const today   = new Date();
+  const dateStr = formatDate(today);
+  const label   = `Entry ${diaryItems.length + 1}`;
+  const encText = resultEncText ? (resultEncText.textContent || "").trim() : "";
+
+  const snapshotArr = JSON.parse(JSON.stringify(currentArrangement));
+
+  const item = {
+    id: uid(),
+    label,
+    date: dateStr,
+    enc: encText || "This bouquet carries a quiet story of care and reflection.",
+    note: "",
+    snapshot: currentSnapshot,
+    arrangement: snapshotArr
   };
-  resultEncText.textContent = moodToEnc[mainMood] || moodToEnc.calm;
+
+  diaryItems.push(item);
+  buildDiaryList();
+  showView("share");
 }
 
-/* -------------------- 5) Share page (floating bubbles) -------------------- */
-let shareTicking = false, shareAnimId = null;
-const wall = document.getElementById("share-wall");
+/* Bind Save to Diary button */
 
-document.getElementById("btn-add")?.addEventListener("click", () => createBubble());
-
-function rnd(min, max) { return Math.random() * (max - min) + min; }
-function uid() { return Math.random().toString(36).slice(2, 9); }
-
-function createBubble(opts = {}) {
-  const b = document.createElement("div");
-  b.className = "bubble"; b.dataset.id = uid();
-  const W = wall.clientWidth, H = wall.clientHeight;
-  const s = opts.size ?? rnd(140, 190);
-  b.style.width = b.style.height = s + "px";
-  b.style.left = (opts.x ?? rnd(0, W - s)) + "px";
-  b.style.top  = (opts.y ?? rnd(0, H - s)) + "px";
-  b.innerHTML = `
-    <div class="thumb" aria-hidden="true">Art</div>
-    <div class="label">${opts.title || "User’s Work"}</div>
-    <div class="reactions">
-      <div class="react like" role="button" aria-pressed="false" aria-label="Like"><span>👍</span><span class="count">${opts.likes || 0}</span></div>
-      <div class="react fav" role="button" aria-pressed="false" aria-label="Favorite"><span>💗</span><span class="count">${opts.favs || 0}</span></div>
-    </div>
-  `;
-  b.querySelector(".like").addEventListener("click", (e) => { e.stopPropagation(); toggleReact(e.currentTarget); });
-  b.querySelector(".fav").addEventListener("click",  (e) => { e.stopPropagation(); toggleReact(e.currentTarget); });
-  b.addEventListener("click", () => showView("detail"));
-  enableDragBubble(b);
-  b._vx = rnd(-0.15, 0.15); b._vy = rnd(-0.2, -0.05);
-  wall.appendChild(b);
-  return b;
-}
-
-function toggleReact(el) {
-  const cnt = el.querySelector(".count");
-  const active = el.classList.toggle("active");
-  el.setAttribute("aria-pressed", active ? "true" : "false");
-  cnt.textContent = Math.max(0, (+cnt.textContent) + (active ? 1 : -1));
-}
-
-function enableDragBubble(el) {
-  let dragging = false, sx = 0, sy = 0, sl = 0, st = 0;
-  el.style.cursor = "grab";
-  el.addEventListener("pointerdown", (e) => {
-    dragging = true; el.setPointerCapture(e.pointerId);
-    sx = e.clientX; sy = e.clientY;
-    const r = el.getBoundingClientRect(), wr = wall.getBoundingClientRect();
-    sl = r.left - wr.left; st = r.top - wr.top;
-    el.style.cursor = "grabbing"; el._dragHold = true;
+if (btnSaveToDiary) {
+  btnSaveToDiary.addEventListener("click", () => {
+    addCurrentToDiary();
   });
-  el.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - sx, dy = e.clientY - sy, w = wall.clientWidth, h = wall.clientHeight, s = el.offsetWidth;
-    el.style.left = Math.max(0, Math.min(sl + dx, w - s)) + "px";
-    el.style.top  = Math.max(0, Math.min(st + dy, h - s)) + "px";
-  });
-  el.addEventListener("pointerup", (e) => {
-    dragging = false; el.releasePointerCapture(e.pointerId); el.style.cursor = "grab"; requestAnimationFrame(() => el._dragHold = false);
-  });
-  el.addEventListener("pointercancel", () => { dragging = false; el.style.cursor = "grab"; el._dragHold = false; });
 }
 
-function shareTick() {
-  if (!shareTicking) return;
-  const W = wall.clientWidth, H = wall.clientHeight;
-  wall.querySelectorAll(".bubble").forEach(b => {
-    if (b._dragHold) return;
-    const s = b.offsetWidth; let x = parseFloat(b.style.left), y = parseFloat(b.style.top);
-    x += b._vx; y += b._vy;
-    if (x < -s*0.05) x = W - s*0.95; if (x > W - s*0.95) x = -s*0.05;
-    if (y < -s*0.2)  y = H - s*0.8;  if (y > H - s*0.8)  y = -s*0.2;
-    b.style.left = x + "px"; b.style.top = y + "px";
+/* Build diary list in Share view */
+
+function buildDiaryList() {
+  if (!diaryList) return;
+  diaryList.innerHTML = "";
+
+  if (!diaryItems.length) {
+    diaryList.innerHTML =
+      `<p style="font-size:14px; opacity:.8;">No entries yet. Save a bouquet from the Result page to start your diary ✿</p>`;
+    return;
+  }
+
+  diaryItems.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "diary-item";
+    div.dataset.id = item.id;
+
+    const preview = item.note || item.enc;
+    const shortPreview =
+      preview.length > 60 ? preview.slice(0, 57) + "..." : preview;
+
+    div.innerHTML = `
+      <div class="meta">
+        <span class="label">${item.label}</span>
+        <span class="date">${item.date}</span>
+        <span style="font-size:12px; opacity:.85;">${shortPreview}</span>
+      </div>
+      <button class="delete-btn" type="button" aria-label="Delete entry">✕</button>
+    `;
+
+    div.addEventListener("click", () => openDetail(item.id));
+
+    const delBtn = div.querySelector(".delete-btn");
+    delBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      diaryItems = diaryItems.filter(d => d.id !== item.id);
+
+      if (currentDetailId === item.id) {
+        currentDetailId = null;
+        showView("share");
+      }
+
+      buildDiaryList();
+    });
+
+    diaryList.appendChild(div);
   });
-  shareAnimId = requestAnimationFrame(shareTick);
 }
 
-function startShare() {
-  if (shareTicking) return;
-  shareTicking = true;
-  if (!wall.querySelector(".bubble")) {
-    for (let i = 0; i < 10; i++) {
-      createBubble({ title: "User’s Work", likes: Math.floor(Math.random() * 10), favs: Math.floor(Math.random() * 8) });
+/* Open detail view for a diary entry */
+
+function openDetail(id) {
+  const item = diaryItems.find(d => d.id === id);
+  if (!item) return;
+
+  currentDetailId = item.id;
+
+  if (detailEncP) {
+    detailEncP.textContent = item.enc;
+  }
+  if (detailNoteP) {
+    detailNoteP.textContent = item.note || "(No diary written yet.)";
+  }
+
+  if (detailImg) {
+    if (item.snapshot) {
+      detailImg.src = item.snapshot;
+    } else {
+      detailImg.removeAttribute("src");
+      detailImg.alt = "No snapshot available.";
     }
   }
-  shareAnimId = requestAnimationFrame(shareTick);
-}
-function stopShare() {
-  shareTicking = false;
-  if (shareAnimId) { cancelAnimationFrame(shareAnimId); shareAnimId = null; }
+
+  showView("detail");
 }
 
-/* -------------------- 6) Detail modal -------------------- */
-const detailModal = document.getElementById("detail-modal");
-document.getElementById("btn-leave")?.addEventListener("click", () => {
-  detailModal.style.display = "block"; detailModal.setAttribute("aria-hidden", "false");
-});
-document.getElementById("btn-close")?.addEventListener("click", () => {
-  detailModal.style.display = "none"; detailModal.setAttribute("aria-hidden", "true");
-});
+/* =======================
+   Diary modal
+   ======================= */
 
-/* -------------------- 7) Init -------------------- */
-document.addEventListener("DOMContentLoaded", () => {
-  renderPalette(FLOWERS);
-  renderModals(FLOWERS);
-  // 初始视图（如果你的 HTML 默认已显示 .active，可不用）
-  // showView("home");
-});
+const detailModal   = document.getElementById("detail-modal");
+const btnWrite      = document.getElementById("btn-write");
+const btnClose      = document.getElementById("btn-close");
+const btnPost       = document.getElementById("btn-post");
+const diaryTextarea = document.getElementById("diary-text");
+
+if (btnWrite && detailModal) {
+  btnWrite.addEventListener("click", () => {
+    if (!currentDetailId) return;
+    const item = diaryItems.find(d => d.id === currentDetailId);
+    if (item && diaryTextarea) {
+      diaryTextarea.value = item.note || "";
+    }
+    detailModal.style.display = "block";
+  });
+}
+if (btnClose && detailModal) {
+  btnClose.addEventListener("click", () => {
+    detailModal.style.display = "none";
+  });
+}
+if (btnPost && detailModal && diaryTextarea) {
+  btnPost.addEventListener("click", () => {
+    if (!currentDetailId) return;
+    const item = diaryItems.find(d => d.id === currentDetailId);
+    if (!item) return;
+
+    const text = diaryTextarea.value.trim();
+    item.note = text;
+
+    if (detailNoteP) {
+      detailNoteP.textContent = text || "(No diary written yet.)";
+    }
+
+    buildDiaryList();
+    detailModal.style.display = "none";
+  });
+}
+
+/* Initial diary state */
+buildDiaryList();
