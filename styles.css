@@ -21,8 +21,12 @@ html, body{
   min-height:100%;
   color:var(--ink);
   font-family:"Poppins","Helvetica Neue",Arial,sans-serif;
-  background:var(--cream);
+  background:
+    url('https://i.postimg.cc/7bcsWZt3/7bcsWZt3.png') center/cover fixed no-repeat,
+    var(--cream);
 }
+
+
 
 body{
   display:flex;
