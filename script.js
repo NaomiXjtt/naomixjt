@@ -19,7 +19,7 @@ const FLOWER_DATA = {
 
 let currentArrangement = [];
 let currentUsedFlowers = [];
-let currentSnapshot = "";     // PNG dataURL of the current bouquet
+let currentSnapshot = "";     // ⭐ PNG dataURL of the current bouquet
 
 let selected = null;
 let zCounter = 20;
@@ -112,12 +112,11 @@ if (btnFinish) {
     // 2. take snapshot with html2canvas
     try {
       const canvas = await html2canvas(homeStage, {
-        backgroundColor: '#F6ECD9',  // ✅ 不再透明，避免把 body 背景截进去
+        backgroundColor: '#F6ECD9', // ✅ 固定成奶油色，不透明
         useCORS: true,
         scale: 2
       });
       currentSnapshot = canvas.toDataURL("image/png");
-      const resultImg = document.getElementById("result-img");
       if (resultImg) {
         resultImg.src = currentSnapshot;
       }
@@ -432,6 +431,7 @@ window.addEventListener("resize", positionToolsNearVase);
    ======================= */
 
 const resultEncText = document.getElementById("result-enc-text");
+const resultImg     = document.getElementById("result-img");
 
 /* Collect current placed flowers from home-stage */
 function captureArrangement() {
